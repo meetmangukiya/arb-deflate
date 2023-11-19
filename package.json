@@ -1,0 +1,11 @@
+{
+  "name": "rle-smart-wallet",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/OffchainLabs/stylus-hello-world",
+  "author": "Meet Mangukiya <meet@flamy.dev>",
+  "license": "MIT",
+  "dependencies": {
+    "ethers": "^6.8.1"
+  }
+}
