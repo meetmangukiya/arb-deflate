@@ -1,66 +1,54 @@
-## Foundry
+# arb-deflate
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+A simple single-owner smart contract wallet built with [Arbitrum Stylus](https://docs.arbitrum.io/stylus/stylus-quickstart)
+that allows arbitrary `call` and `delegatecall`s. It uses [`flate2`](https://github.com/rust-lang/flate2-rs)'s
+inflate implementation to inflate a deflated(compressed) calldata. This allows
+for shorter calldata and lower transaction costs since on L2s calldata is more expensive
+than execution costs.
 
-Foundry consists of:
+## Deploy
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+```bash
+$ cargo stylus check
+$ cargo stylus deploy --private-key $PK
+Uncompressed WASM size: 60.0 KB
+Compressed WASM size to be deployed onchain: 22.5 KB
+Connecting to Stylus RPC endpoint: https://stylus-testnet.arbitrum.io/rpc
+Program succeeded Stylus onchain activation checks with Stylus version: 1
+Deployer address: 0x5C5F81454d78bb96c82209d048406D592ABD3674
 
-## Documentation
+====DEPLOYMENT====
+Deploying program to address 0xc9560cc6b7a1d26E433833eFFBb72e87988f45C4
+Base fee: 0.100000000 gwei
+Estimated gas for deployment: 4915093 gas units
+Submitting deployment tx...
+Confirmed deployment tx 0x43da18b854e331ca1bf526c8d75eeefc842ad22a2c4a4fa0af3eb70087f9166d
+Gas units used 4915093, effective gas price 0.100000000 gwei
+Transaction fee: 0.000491509300000000 ETH
 
-https://book.getfoundry.sh/
-
-## Usage
-
-### Build
-
-```shell
-$ forge build
+====ACTIVATION====
+Activating program at address 0xc9560cc6b7a1d26E433833eFFBb72e87988f45C4
+Base fee: 0.100000000 gwei
+Estimated gas for activation: 14044638 gas units
+Submitting activation tx...
+Confirmed activation tx 0x1d7bed4b4a423ec9a8dd7f277f2f4df642989818ea1dd532e3cf12262fb566f9
+Gas units used 14044638, effective gas price 0.100000000 gwei
+Transaction fee: 0.001404463800000000 ETH
 ```
 
-### Test
+Simple benchmark shows 5x shorter calldata for a simple multicall for 4 token transfers using multicall3:
 
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
+```bash
+$ node benchmark.js
+Wallet deployed at address: 0xc9560cc6b7a1d26E433833eFFBb72e87988f45C4
+Current owner: 0x5C5F81454d78bb96c82209d048406D592ABD3674
+set owner tx: 0xfb4548e9a000a248193146511ce14463782744a62384de20bcd4ba93b88e4166
+set owner tx confirmed
+New owner: 0x5C5F81454d78bb96c82209d048406D592ABD3674
+uncompressed calldata length to send 4 tokens:  1672
+deflated calldata length:  336
+{
+  bigMulticall: '0x252dba42000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000012000000000000000000000000000000000000000000000000000000000000001c000000000000000000000000000000000000000000000000000000000000002600000000000000000000000003dfb15e4eaa26581b8fcd46eb62308a541ff3292000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000241e83409a00000000000000000000000082af49447d8a07e3bd95bd0d56f35241523fbab1000000000000000000000000000000000000000000000000000000000000000000000000000000003dfb15e4eaa26581b8fcd46eb62308a541ff3292000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000241e83409a0000000000000000000000002f2a2543b76a4166549f7aab2e75bef0aefc5b0f000000000000000000000000000000000000000000000000000000000000000000000000000000003dfb15e4eaa26581b8fcd46eb62308a541ff3292000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000241e83409a000000000000000000000000f97f4df75117a78c1a5a0dbb814af92458539fb4000000000000000000000000000000000000000000000000000000000000000000000000000000003dfb15e4eaa26581b8fcd46eb62308a541ff3292000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000241e83409a000000000000000000000000fa7f8980b0f1e64a2062791cc3b0871572f1f7f000000000000000000000000000000000000000000000000000000000',
+  deflatedHexString: '789c53d5dde5c4801f281090672120df805f9a9180f98c07f0cb332520f36c7f8b3e79b528b571c79f2b79db9439963afe379a845f3f8303017915b9668759c8024deb3d5d6abbd81fef9dba9737ec73906390fdae8d04cca0abfbf4b5549db76739a685ccaf5aad57baefc3ba3fd1fc83c97d3feb7dbf078a2fef918ae2dddde8f553252278fe96c1e4be5ff59d0d1b3e3ef35248aa9439bca15db4e8e3f70ff80c00009dcc5f24'
+}
 ```
